@@ -1,0 +1,79 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #333;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#main-menu, #settings-screen, #upgrade-screen {
+    text-align: center;
+}
+
+#main-menu h1, #settings-screen h2, #upgrade-screen h2 {
+    margin-bottom: 2rem;
+}
+
+button {
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    background-color: #4477aa;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    margin: 0.5rem;
+}
+
+button:hover {
+    background-color: #5588bb;
+}
+
+.hidden {
+    display: none;
+}
+
+#game-canvas {
+    background-color: #000;
+    border: 2px solid #fff;
+}
+
+#joystick-container {
+    position: absolute;
+    bottom: 50px;
+    left: 50px;
+    width: 100px;
+    height: 100px;
+    display: none; /* Hidden by default, shown on mobile */
+}
+
+#joystick {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+#upgrade-options {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.upgrade-card {
+    border: 2px solid #fff;
+    padding: 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.upgrade-card.selected {
+    background-color: #4477aa;
+}
