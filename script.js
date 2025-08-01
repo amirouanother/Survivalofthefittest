@@ -195,82 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     class Enemy {
         constructor(x, y) {
-            this.x = x;
-            this.y = y;
-            this.effects = {
-                poison: { active: false, dps: 0, duration: 0 },
-                freeze: { active: false, duration: 0, originalSpeed: 0 }
-            };
-        }
-        
-        takeDamage(amount, type) {
-            this.health -= amount;
-            if (this.health <= 0) return; // Will be filtered out in main loop
-
-            if (type === 'lifesteal') {
-                 player.health = Math.min(player.maxHealth, player.health + amount * player.lifesteal);
-            }
-            if (type === 'poison') {
-                this.effects.poison.active = true;
-                this.effects.poison.dps = player.damage * 0.2; // Poison deals 20% of bullet damage per second
-                this.effects.poison.duration = 3000; // 3 seconds
-            }
-             if (type === 'freeze') {
-                if(!this.effects.freeze.active) this.effects.freeze.originalSpeed = this.speed;
-                this.effects.freeze.active = true;
-                this.effects.freeze.duration = 1000; // 1 second
-            }
-        }
-        
-        update(deltaTime) {
-             // Handle effects
-            if (this.effects.poison.active) {
-                this.health -= this.effects.poison.dps * (deltaTime / 1000);
-                this.effects.poison.duration -= deltaTime;
-                if(this.effects.poison.duration <= 0) this.effects.poison.active = false;
-            }
-            
-            this.speed = this.effects.freeze.originalSpeed;
-            if (this.effects.freeze.active) {
-                this.speed *= 0.5; // 50% slow
-                this.effects.freeze.duration -= deltaTime;
-                if(this.effects.freeze.duration <= 0) this.effects.freeze.active = false;
-            }
-
-            // Movement
-            const angle = Math.atan2(player.y - this.y, player.x - this.x);
-            this.x += Math.cos(angle) * this.speed;
-            this.y += Math.sin(angle) * this.speed;
-        }
-
-        draw() {
-             ctx.fillStyle = this.effects.poison.active ? '#00FF00' : (this.effects.freeze.active ? '#ADD8E6' : this.color);
-        }
-    }
-
-    class Triangle extends Enemy {
-        constructor(x, y) {
-            super(x, y);
-            this.size = 20;
-            this.color = '#FF4136';
-            this.speed = 1.5 + waveNumber * 0.05;
-            this.health = 20 + waveNumber * 5;
-            this.damage = 5;
-        }
-        
-        draw() {
-            super.draw(); // To set color based on effect
-            ctx.beginPath();
-            ctx.moveTo(this.x, this.y - this.size / 2);
-            ctx.lineTo(this.x - this.size / 2, this.y + this.size / 2);
-            ctx.lineTo(this.x + this.size / 2, this.y + this.size / 2);
-            ctx.closePath();
-            ctx.fill();
-        }
-    }
-
-    class Cube extends Enemy {
-        constructor(x, y) {
             super(x, y);
             this.size = 30;
             this.color = '#B10DC9';
@@ -490,19 +414,30 @@ document.addEventListener('DOMContentLoaded', () => {
         mainMenu.querySelector('h1').textContent = `Game Over! You reached Wave ${waveNumber}`;
     }
 
+    /**
+     * MODIFIED FUNCTION
+     * Spawns enemies in a circle around the player, just off-screen.
+     */
     function startNextWave() {
         waveNumber++;
+        // Define a spawn radius just outside the viewport from the player's perspective
+        const spawnRadius = Math.sqrt(Math.pow(canvas.width / 2, 2) + Math.pow(canvas.height / 2, 2)) + 50;
+
         const numTriangles = 5 + waveNumber * 2;
         const numCubes = Math.floor(waveNumber / 3);
 
         for (let i = 0; i < numTriangles; i++) {
-            const x = Math.random() < 0.5 ? -30 : canvas.width + 30;
-            const y = Math.random() * canvas.height;
+            // Calculate a random angle
+            const angle = Math.random() * Math.PI * 2;
+            // Calculate spawn position based on player's location and the angle/radius
+            const x = player.x + Math.cos(angle) * spawnRadius;
+            const y = player.y + Math.sin(angle) * spawnRadius;
             enemies.push(new Triangle(x, y));
         }
         for (let i = 0; i < numCubes; i++) {
-            const x = Math.random() * canvas.width;
-            const y = Math.random() < 0.5 ? -30 : canvas.height + 30;
+            const angle = Math.random() * Math.PI * 2;
+            const x = player.x + Math.cos(angle) * spawnRadius;
+            const y = player.y + Math.sin(angle) * spawnRadius;
             enemies.push(new Cube(x, y));
         }
         isPaused = false;
@@ -541,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function gameLoop(timestamp) {
         if (!gameRunning) return;
 
-        const deltaTime = timestamp - lastTime;
+        const deltaTime = (timestamp - lastTime) || 0;
         lastTime = timestamp;
 
         if (!isPaused) {
@@ -607,13 +542,42 @@ document.addEventListener('DOMContentLoaded', () => {
         particles = particles.filter(p => p.life > 0);
         
         // Check for wave end
-        if(enemies.length === 0 && gameRunning) {
+        if(enemies.length === 0 && gameRunning && !isPaused) {
             showUpgradeScreen();
         }
     }
 
+    /**
+     * NEW FUNCTION
+     * Draws a checkerboard pattern on the canvas.
+     */
+    function drawBackground() {
+        const tileSize = 50; // Size of the checkerboard squares
+        const color1 = '#555555'; // Dark grey
+        const color2 = '#444444'; // Darker grey
+
+        for (let y = 0; y < canvas.height; y += tileSize) {
+            for (let x = 0; x < canvas.width; x += tileSize) {
+                const col = Math.floor(x / tileSize);
+                const row = Math.floor(y / tileSize);
+
+                if ((row + col) % 2 === 0) {
+                    ctx.fillStyle = color1;
+                } else {
+                    ctx.fillStyle = color2;
+                }
+                ctx.fillRect(x, y, tileSize, tileSize);
+            }
+        }
+    }
+
+    /**
+     * MODIFIED FUNCTION
+     * Now draws the background first.
+     */
     function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // ctx.clearRect(0, 0, canvas.width, canvas.height); // No longer needed
+        drawBackground(); // Draw the new background
 
         particles.forEach(p => p.draw());
         bots.forEach(bot => bot.draw());
@@ -627,7 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const barHeight = 20;
         const barX = canvas.width - barWidth - 20;
         const barY = canvas.height - barHeight - 20;
-        ctx.fillStyle = '#555';
+        ctx.fillStyle = '#333';
         ctx.fillRect(barX, barY, barWidth, barHeight);
         ctx.fillStyle = '#FF4136';
         ctx.fillRect(barX, barY, barWidth * (player.health / player.maxHealth), barHeight);
@@ -698,15 +662,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleTouchEnd(e) {
         e.preventDefault();
         if (joystick.active) {
-            const touch = e.changedTouches[0];
-             // If this is the touch that started the joystick
-             if(touch.clientX === joystick.baseX && touch.clientY === joystick.baseY){
+            let touchEnded = false;
+            for(let i=0; i<e.changedTouches.length; i++){
+                const touch = e.changedTouches[i];
+                 // If this is the touch that started the joystick
+                 if(touch.clientX === joystick.baseX && touch.clientY === joystick.baseY){
+                    touchEnded = true;
+                    break;
+                 }
+            }
+            if(touchEnded) {
                 joystick.active = false;
                 joystick.dx = 0;
                 joystick.dy = 0;
                 joystickElement.style.transform = `translate(0px, 0px)`;
                 joystickContainer.style.display = 'none';
-             }
+            }
         }
     }
 
