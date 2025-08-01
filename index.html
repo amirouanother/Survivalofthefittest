@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Blue Circle's Adventure</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="main-menu">
+        <h1>Blue Circle's Adventure</h1>
+        <button id="start-button">Start Game</button>
+        <button id="settings-button">Settings</button>
+    </div>
+
+    <div id="settings-screen" class="hidden">
+        <h2>Settings</h2>
+        <label for="sfx-volume">SFX Volume:</label>
+        <input type="range" id="sfx-volume" min="0" max="1" step="0.1" value="0.5">
+        <label for="music-volume">Music Volume:</label>
+        <input type="range" id="music-volume" min="0" max="1" step="0.1" value="0.5">
+        <button id="back-to-menu-button">Back</button>
+    </div>
+
+    <canvas id="game-canvas" class="hidden"></canvas>
+
+    <div id="joystick-container">
+        <div id="joystick"></div>
+    </div>
+
+    <div id="upgrade-screen" class="hidden">
+        <h2>Choose a Boost!</h2>
+        <div id="upgrade-options"></div>
+        <button id="confirm-upgrade-button">Confirm</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
